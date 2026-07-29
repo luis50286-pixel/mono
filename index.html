@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLARO WEB</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div id="login-card" class="card">
+        <h2>Unirse al Chat</h2>
+        <div id="error-msg" class="error-msg">Por favor ingresa un nombre para continuar</div>
+        <div class="input-group">
+            <label for="username">Tu Nombre / Apodo</label>
+            <input type="text" id="username" placeholder="Ej. Carlos, María, Anónimo..." onkeypress="handleLoginKeyPress(event)">
+        </div>
+        <button onclick="login()">Entrar al Chat</button>
+    </div>
+
+    <div id="chat-container">
+        <div class="chat-header">
+            <h3>CLARO WEB</h3>
+            <span id="user-display" class="user-display"></span>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message received">
+                <span class="user-name">Sistema</span>
+                ¡Bienvenido a la sala de chat!
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="message-input" placeholder="Escribe un mensaje..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Enviar</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
