@@ -62,7 +62,8 @@ function listenForMessages() {
         const data = snapshot.val();
         
         const messageDiv = document.createElement('div');
-        messageDiv.id = `msg-${snapshot.key}`; // ID único para sincronizar borrado
+        // ASIGNACIÓN CLAVE: ID único con la clave de Firebase
+        messageDiv.id = `msg-${snapshot.key}`;
         
         const isSentByMe = data.user === currentUser;
         messageDiv.classList.add('message', isSentByMe ? 'sent' : 'received');
@@ -76,7 +77,7 @@ function listenForMessages() {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
 
-    // Escuchar cuando se elimine un nodo individual o toda la colección
+    // EVENTO CLAVE: Borra el mensaje de la pantalla cuando se elimina en Firebase
     messagesRef.on('child_removed', (snapshot) => {
         const msgDiv = document.getElementById(`msg-${snapshot.key}`);
         if (msgDiv) {
@@ -85,7 +86,7 @@ function listenForMessages() {
     });
 }
 
-// 4. Vaciar el chat en Firebase
+// 4. Vaciar la base de datos en Firebase
 function clearChat() {
     if (confirm("¿Estás seguro de que deseas borrar todos los mensajes de la sala?")) {
         messagesRef.remove()
@@ -98,7 +99,7 @@ function clearChat() {
     }
 }
 
-// 5. Limpiar caracteres especiales para evitar XSS
+// 5. Limpia caracteres especiales (Seguridad XSS)
 function escapeHTML(str) {
     if (!str) return '';
     return str.replace(/[&<>'"]/g, 
