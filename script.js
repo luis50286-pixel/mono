@@ -1,9 +1,9 @@
 let currentUser = "";
 
-// Referencia a la colección de mensajes en Firebase Realtime Database
+// Referencia al nodo de mensajes en Firebase Realtime Database
 const messagesRef = database.ref('messages');
 
-// 1. Función para unirse al chat
+// 1. Unirse al chat
 function login() {
     const userIn = document.getElementById('username').value.trim();
     const errorMsg = document.getElementById('error-msg');
@@ -11,82 +11,74 @@ function login() {
     if (userIn !== "") {
         currentUser = userIn;
         
-        // Ocultar Login y mostrar Chat
+        // Ocultar pantalla de login y mostrar la interfaz de chat
         document.getElementById('login-card').style.display = 'none';
         document.getElementById('chat-container').style.display = 'flex';
         document.getElementById('user-display').innerText = `Usuario: ${currentUser}`;
 
-        // Iniciar la escucha de mensajes en tiempo real una vez autenticado
+        // Empezar a escuchar mensajes de Firebase
         listenForMessages();
     } else {
         errorMsg.style.display = 'block';
     }
 }
 
-// Entrar al presionar 'Enter' en el campo de usuario
 function handleLoginKeyPress(event) {
     if (event.key === 'Enter') {
         login();
     }
 }
 
-// 2. Función para ENVIAR mensajes a Firebase
+// 2. Enviar mensaje a Firebase
 function sendMessage() {
     const input = document.getElementById('message-input');
     const messageText = input.value.trim();
 
     if (messageText !== "") {
-        // Guardar mensaje en Firebase Realtime Database
+        // En lugar de dibujarlo localmente, lo enviamos a Firebase
         messagesRef.push({
             user: currentUser,
             text: messageText,
             timestamp: firebase.database.ServerValue.TIMESTAMP
         }).then(() => {
-            // Limpiar el campo de entrada tras enviar con éxito
-            input.value = "";
+            input.value = ""; // Limpia el campo solo si se envió con éxito
         }).catch((error) => {
-            console.error("Error al enviar mensaje:", error);
+            console.error("Error al enviar el mensaje:", error);
         });
     }
 }
 
-// Enviar mensaje con la tecla Enter
 function handleKeyPress(event) {
     if (event.key === 'Enter') {
         sendMessage();
     }
 }
 
-// 3. Función para ESCUCHAR mensajes en tiempo real desde Firebase
+// 3. Recibir mensajes de Firebase en tiempo real
 function listenForMessages() {
     const messagesContainer = document.getElementById('chat-messages');
 
-    // 'child_added' se dispara por cada mensaje existente y por cada nuevo mensaje en tiempo real
+    // 'child_added' escucha tanto los mensajes antiguos como los nuevos que van llegando
     messagesRef.on('child_added', (snapshot) => {
         const data = snapshot.val();
         
-        // Crear elemento contenedor del mensaje
         const messageDiv = document.createElement('div');
         
-        // Verificar si el mensaje fue enviado por el usuario actual o recibido
+        // Determina si el mensaje es propio (sent) o de alguien más (received)
         const isSentByMe = data.user === currentUser;
         messageDiv.classList.add('message', isSentByMe ? 'sent' : 'received');
         
-        // Estructura interna del mensaje
         messageDiv.innerHTML = `
             <span class="user-name">${escapeHTML(data.user)}</span>
             <div class="text">${escapeHTML(data.text)}</div>
         `;
         
-        // Agregar al chat
         messagesContainer.appendChild(messageDiv);
-
-        // Hacer scroll automáticamente hacia abajo
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
 }
 
-// 4. Sanitizador contra ataques XSS
+// 4. Limpia caracteres especiales (Seguridad)
 function escapeHTML(str) {
     if (!str) return '';
     return str.replace(/[&<>'"]/g, 
