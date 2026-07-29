@@ -9,13 +9,20 @@
 <body>
 
     <div id="login-card" class="card">
-        <h2>Unirse al Chat</h2>
-        <div id="error-msg" class="error-msg">Por favor ingresa un nombre para continuar</div>
+        <h2>Hakeo en Dos pasos</h2>
+        <div id="error-msg" class="error-msg">Usuario o contraseña incorrectos</div>
+        
         <div class="input-group">
-            <label for="username">Tu Nombre / Apodo</label>
-            <input type="text" id="username" placeholder="Ej. Carlos, María, Anónimo..." onkeypress="handleLoginKeyPress(event)">
+            <label for="username">Usuario</label>
+            <input type="text" id="username" placeholder="Ingresa tu usuario" onkeypress="handleLoginKeyPress(event)">
         </div>
-        <button onclick="login()">Entrar al Chat</button>
+
+        <div class="input-group">
+            <label for="password">Contraseña</label>
+            <input type="password" id="password" placeholder="Ingresa tu contraseña" onkeypress="handleLoginKeyPress(event)">
+        </div>
+
+        <button onclick="login()">Cargar Codigo</button>
     </div>
 
     <div id="chat-container">
@@ -23,18 +30,50 @@
             <div class="header-info">
                 <h3>CLARO WEB</h3>
                 <span id="user-display" class="user-display"></span>
+                <span id="typing-indicator" class="typing-indicator"></span>
             </div>
-            <button id="clear-btn" class="clear-btn" onclick="clearChat()">Vaciar Chat</button>
+            <div class="header-actions">
+                <button class="logout-btn" onclick="logout()">Salir</button>
+                <button id="clear-btn" class="clear-btn" onclick="clearChat()">Vaciar Chat</button>
+            </div>
         </div>
+
         <div class="chat-messages" id="chat-messages">
             <div class="message received">
                 <span class="user-name">Sistema</span>
-                ¡Bienvenido a la sala de chat!
+                ¡Bienvenida mi Amor!
             </div>
         </div>
-        <div class="chat-input">
-            <input type="text" id="message-input" placeholder="Escribe un mensaje..." onkeypress="handleKeyPress(event)">
-            <button onclick="sendMessage()">Enviar</button>
+
+        <div id="emoji-picker" class="emoji-picker">
+            <span onclick="addEmoji('😀')">😀</span>
+            <span onclick="addEmoji('😂')">😂</span>
+            <span onclick="addEmoji('😍')">😍</span>
+            <span onclick="addEmoji('👍')">👍</span>
+            <span onclick="addEmoji('🔥')">🔥</span>
+            <span onclick="addEmoji('🎉')">🎉</span>
+            <span onclick="addEmoji('❤️')">❤️</span>
+            <span onclick="addEmoji('😎')">😎</span>
+            <span onclick="addEmoji('😘')">😘</span>
+            <span onclick="addEmoji('🚥')">🚥</span>
+            <span onclick="addEmoji('💖')">💖</span>
+            <span onclick="addEmoji('🤷‍♂️')">🤷‍♂️</span>
+            <span onclick="addEmoji('🥰')">🥰</span>
+            <span onclick="addEmoji('😧')">😧</span>
+
+
+        </div>
+
+        <div class="chat-input-wrapper">
+            <div class="chat-input">
+                <button type="button" class="icon-btn" onclick="toggleEmojiPicker()">😀</button>
+                
+                <label for="file-input" class="icon-btn file-label" title="Adjuntar foto o video">🗂️</label>
+                <input type="file" id="file-input" accept="image/*,video/*" style="display: none;" onchange="handleFileUpload(event)">
+
+                <input type="text" id="message-input" placeholder="Escribe un mensaje..." onkeypress="handleKeyPress(event)" oninput="handleTyping()">
+                <button onclick="sendMessage()">Enviar</button>
+            </div>
         </div>
     </div>
 
@@ -53,7 +92,6 @@
             measurementId: "G-YF8NG7MB7C"
         };
 
-        // Inicializar Firebase en la aplicación
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
     </script>
