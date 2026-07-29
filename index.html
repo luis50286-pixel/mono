@@ -35,6 +35,26 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBamBFLFRoBq0g1A0IIGOIJ5ucjYqPrrW0",
+            authDomain: "web-claro-dcc1a.firebaseapp.com",
+            databaseURL: "https://web-claro-dcc1a-default-rtdb.firebaseio.com",
+            projectId: "web-claro-dcc1a",
+            storageBucket: "web-claro-dcc1a.firebasestorage.app",
+            messagingSenderId: "454304195343",
+            appId: "1:454304195343:web:858b54705ea63cd3ef147a",
+            measurementId: "G-YF8NG7MB7C"
+        };
+
+        // Inicializar Firebase en la aplicación
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+    </script>
+
     <script src="script.js"></script>
 </body>
 </html>
