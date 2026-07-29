@@ -35,13 +35,12 @@ function sendMessage() {
     const messageText = input.value.trim();
 
     if (messageText !== "") {
-        // En lugar de dibujarlo localmente, lo enviamos a Firebase
         messagesRef.push({
             user: currentUser,
             text: messageText,
             timestamp: firebase.database.ServerValue.TIMESTAMP
         }).then(() => {
-            input.value = ""; // Limpia el campo solo si se envió con éxito
+            input.value = "";
         }).catch((error) => {
             console.error("Error al enviar el mensaje:", error);
         });
@@ -54,17 +53,17 @@ function handleKeyPress(event) {
     }
 }
 
-// 3. Recibir mensajes de Firebase en tiempo real
+// 3. Recibir y gestionar mensajes de Firebase en tiempo real
 function listenForMessages() {
     const messagesContainer = document.getElementById('chat-messages');
 
-    // 'child_added' escucha tanto los mensajes antiguos como los nuevos que van llegando
+    // Escuchar mensajes agregados
     messagesRef.on('child_added', (snapshot) => {
         const data = snapshot.val();
         
         const messageDiv = document.createElement('div');
+        messageDiv.id = `msg-${snapshot.key}`; // ID único para sincronizar borrado
         
-        // Determina si el mensaje es propio (sent) o de alguien más (received)
         const isSentByMe = data.user === currentUser;
         messageDiv.classList.add('message', isSentByMe ? 'sent' : 'received');
         
@@ -76,9 +75,30 @@ function listenForMessages() {
         messagesContainer.appendChild(messageDiv);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
+
+    // Escuchar cuando se elimine un nodo individual o toda la colección
+    messagesRef.on('child_removed', (snapshot) => {
+        const msgDiv = document.getElementById(`msg-${snapshot.key}`);
+        if (msgDiv) {
+            msgDiv.remove();
+        }
+    });
 }
 
-// 4. Limpia caracteres especiales (Seguridad)
+// 4. Vaciar el chat en Firebase
+function clearChat() {
+    if (confirm("¿Estás seguro de que deseas borrar todos los mensajes de la sala?")) {
+        messagesRef.remove()
+            .then(() => {
+                console.log("Chat vaciado exitosamente.");
+            })
+            .catch((error) => {
+                console.error("Error al vaciar el chat:", error);
+            });
+    }
+}
+
+// 5. Limpiar caracteres especiales para evitar XSS
 function escapeHTML(str) {
     if (!str) return '';
     return str.replace(/[&<>'"]/g, 
