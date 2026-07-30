@@ -47,14 +47,25 @@ body {
     font-size: 14px;
 }
 
+.error-msg {
+    color: #e74c3c;
+    background-color: #fde8e8;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    display: none;
+    font-size: 13px;
+    text-align: center;
+}
+
 button {
     width: 100%;
     padding: 10px;
     background-color: #007bff;
-    border: none;
     color: white;
-    font-size: 16px;
+    border: none;
     border-radius: 5px;
+    font-size: 16px;
     cursor: pointer;
 }
 
@@ -62,30 +73,21 @@ button:hover {
     background-color: #0056b3;
 }
 
-.error-msg {
-    color: red;
-    font-size: 13px;
-    margin-bottom: 10px;
-    display: none;
-    text-align: center;
-}
-
-/* ESTILOS DEL CHAT */
+/* CHAT CONTAINER */
 #chat-container {
     display: none;
+    flex-direction: column;
     width: 100%;
     max-width: 600px;
-    height: 85vh;
-    background: #fff;
+    height: 90vh;
+    background: #ffffff;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    flex-direction: column;
     overflow: hidden;
-    position: relative;
 }
 
 .chat-header {
-    background-color: #007bff;
+    background: #007bff;
     color: white;
     padding: 15px;
     display: flex;
@@ -93,49 +95,48 @@ button:hover {
     align-items: center;
 }
 
-.header-info {
-    display: flex;
-    flex-direction: column;
+.header-info h3 {
+    font-size: 18px;
 }
 
 .user-display {
     font-size: 12px;
     opacity: 0.9;
+    display: block;
 }
 
 .typing-indicator {
     font-size: 11px;
     font-style: italic;
-    color: #e0e0e0;
-    height: 14px;
+    color: #e2e2e2;
 }
 
 .header-actions {
     display: flex;
-    gap: 8px;
+    gap: 10px;
 }
 
 .logout-btn, .clear-btn {
     width: auto;
     padding: 6px 12px;
-    font-size: 13px;
-    border-radius: 4px;
+    font-size: 12px;
 }
 
 .logout-btn {
-    background-color: #6c757d;
-}
-
-.logout-btn:hover {
-    background-color: #5a6268;
-}
-
-.clear-btn {
     background-color: #dc3545;
 }
 
-.clear-btn:hover {
+.logout-btn:hover {
     background-color: #bd2130;
+}
+
+.clear-btn {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.clear-btn:hover {
+    background-color: #d39e00;
 }
 
 /* MENSAJES */
@@ -154,9 +155,8 @@ button:hover {
     padding: 8px 12px;
     border-radius: 8px;
     font-size: 14px;
-    line-height: 1.4;
-    position: relative;
     word-break: break-word;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
 
 .message.sent {
@@ -177,12 +177,34 @@ button:hover {
     display: block;
 }
 
+/* ESTADOS Y HORA DEL MENSAJE */
+.message-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 4px;
+}
+
 .time-stamp {
     font-size: 10px;
     color: #888;
-    display: block;
-    text-align: right;
-    margin-top: 4px;
+}
+
+.status-ticks {
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+/* Un solo check (Enviado a Firebase) */
+.status-ticks.sent {
+    color: #888888;
+}
+
+/* Doble check (Leído por el otro usuario) */
+.status-ticks.read {
+    color: #34b7f1;
 }
 
 /* MEDIA (FOTOS / VIDEOS) */
@@ -203,22 +225,33 @@ button:hover {
     gap: 12px;
     font-size: 20px;
     cursor: pointer;
-    justify-content: center;
-}
-
-.emoji-picker span:hover {
-    transform: scale(1.2);
+    justify-content: flex-start;
+    flex-wrap: wrap;
 }
 
 .chat-input-wrapper {
     background: #f0f0f0;
+    padding: 10px;
+    border-top: 1px solid #ddd;
 }
 
 .chat-input {
     display: flex;
-    padding: 10px;
     gap: 8px;
     align-items: center;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
+    width: auto;
+}
+
+.file-label {
+    display: inline-block;
 }
 
 .chat-input input[type="text"] {
@@ -229,20 +262,8 @@ button:hover {
     outline: none;
 }
 
-.icon-btn {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    padding: 0 5px;
-}
-
-.file-label {
-    display: inline-block;
-}
-
 .chat-input button {
     width: auto;
-    padding: 10px 18px;
+    padding: 10px 20px;
     border-radius: 20px;
 }
