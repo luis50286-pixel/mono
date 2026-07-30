@@ -39,7 +39,7 @@
         </div>
 
         <div class="chat-messages" id="chat-messages">
-            </div>
+        </div>
 
         <div id="emoji-picker" class="emoji-picker">
             <span onclick="addEmoji('😀')">😀</span>
@@ -73,6 +73,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
     <script>
         const firebaseConfig = {
@@ -88,6 +89,7 @@
 
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const storage = firebase.storage();
     </script>
 
     <script src="script.js"></script>
