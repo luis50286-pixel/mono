@@ -9,7 +9,7 @@ const VALID_USERS = {
 const messagesRef = database.ref('messages');
 const typingRef = database.ref('typing');
 
-// 1. Iniciar Sesión con solicitud de notificaciones
+// 1. Iniciar Sesión y solicitar permisos
 function login() {
     const userIn = document.getElementById('username').value.trim();
     const passIn = document.getElementById('password').value.trim();
@@ -25,10 +25,7 @@ function login() {
         errorMsg.style.display = 'none';
         document.getElementById('password').value = "";
 
-        // Solicitar permiso de notificaciones en el navegador
-        if ("Notification" in window && Notification.permission !== "granted") {
-            Notification.requestPermission();
-        }
+        requestNotificationPermissions();
 
         listenForMessages();
         listenForTyping();
@@ -37,7 +34,28 @@ function login() {
     }
 }
 
-// 2. Cerrar Sesión
+// 2. Solicitud de Permisos de Notificación
+function requestNotificationPermissions() {
+    if (window.AndroidBridge && typeof window.AndroidBridge.requestPermission === 'function') {
+        window.AndroidBridge.requestPermission();
+    } else if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+}
+
+// 3. Disparar Notificaciones
+function triggerNotification(title, body) {
+    if (window.AndroidBridge && typeof window.AndroidBridge.showNotification === 'function') {
+        window.AndroidBridge.showNotification(title, body);
+    } else if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, {
+            body: body,
+            icon: 'https://cdn-icons-png.flaticon.com/512/732/732200.png'
+        });
+    }
+}
+
+// 4. Cerrar Sesión
 function logout() {
     if (currentUser) {
         typingRef.child(currentUser).remove();
@@ -52,7 +70,7 @@ function handleLoginKeyPress(event) {
     if (event.key === 'Enter') login();
 }
 
-// 3. Enviar mensaje de texto
+// 5. Enviar mensaje de texto
 function sendMessage() {
     const input = document.getElementById('message-input');
     const messageText = input.value.trim();
@@ -66,7 +84,7 @@ function sendMessage() {
             type: 'text',
             timestamp: firebase.database.ServerValue.TIMESTAMP,
             readBy: {
-                [currentUser]: true // El emisor lo lee automáticamente al crearse
+                [currentUser]: true
             }
         }).then(() => {
             input.value = "";
@@ -76,17 +94,18 @@ function sendMessage() {
     }
 }
 
-// 4. Adjuntar Fotos / Videos
+// 6. Subir Fotos / Videos mediante Firebase Storage
 function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-        alert("El archivo es muy grande. Elige una foto o video menor a 2MB.");
+    // Límite amplio para Firebase Storage (ej. 50 MB)
+    const MAX_SIZE_MB = 50;
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+        alert(`El archivo es muy pesado. Elige una foto o video menor a ${MAX_SIZE_MB}MB.`);
         return;
     }
 
-    const reader = new FileReader();
     const fileType = file.type.startsWith('image/') ? 'image' : (file.type.startsWith('video/') ? 'video' : null);
 
     if (!fileType) {
@@ -94,24 +113,37 @@ function handleFileUpload(event) {
         return;
     }
 
-    reader.onload = function(e) {
-        const base64Data = e.target.result;
-        messagesRef.push({
-            user: currentUser,
-            mediaUrl: base64Data,
-            type: fileType,
-            timestamp: firebase.database.ServerValue.TIMESTAMP,
-            readBy: {
-                [currentUser]: true
-            }
-        });
-    };
+    const fileName = `${Date.now()}_${file.name}`;
+    const storageRef = storage.ref(`chat_media/${fileName}`);
+    const uploadTask = storageRef.put(file);
 
-    reader.readAsDataURL(file);
+    uploadTask.on('state_changed', 
+        (snapshot) => {
+            // Progreso opcional de subida
+        }, 
+        (error) => {
+            console.error("Error al subir el archivo:", error);
+            alert("No se pudo subir la foto o video.");
+        }, 
+        () => {
+            uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                messagesRef.push({
+                    user: currentUser,
+                    mediaUrl: downloadURL,
+                    type: fileType,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    readBy: {
+                        [currentUser]: true
+                    }
+                });
+            });
+        }
+    );
+
     event.target.value = '';
 }
 
-// 5. Gestor de Emojis
+// 7. Emojis
 function toggleEmojiPicker() {
     const picker = document.getElementById('emoji-picker');
     picker.style.display = picker.style.display === 'flex' ? 'none' : 'flex';
@@ -123,7 +155,7 @@ function addEmoji(emoji) {
     input.focus();
 }
 
-// 6. Indicador de "Escribiendo..."
+// 8. Indicador "Escribiendo..."
 function handleTyping() {
     if (!currentUser) return;
 
@@ -154,7 +186,7 @@ function handleKeyPress(event) {
     if (event.key === 'Enter') sendMessage();
 }
 
-// Helper para construir las palomitas ✓ o ✓✓
+// Generador de palomitas (✓ o ✓✓)
 function renderTicksHTML(data) {
     const readBy = data.readBy || {};
     const readers = Object.keys(readBy).filter(u => u !== data.user);
@@ -167,28 +199,22 @@ function renderTicksHTML(data) {
     `;
 }
 
-// 7. Renderizado y escucha de Mensajes en Tiempo Real
+// 9. Renderizado y escucha de Mensajes
 function listenForMessages() {
     const messagesContainer = document.getElementById('chat-messages');
 
-    // Al recibir/cargar mensajes
     messagesRef.on('child_added', (snapshot) => {
         const data = snapshot.val();
         const msgKey = snapshot.key;
         const isSentByMe = data.user === currentUser;
 
-        // Si el mensaje es de otro usuario y no lo he leído, marcarlo como leído en Firebase
         if (!isSentByMe && (!data.readBy || !data.readBy[currentUser])) {
             messagesRef.child(msgKey).child('readBy').child(currentUser).set(true);
         }
 
-        // Notificación emergente del navegador si el mensaje es de otra persona
-        if (!isSentByMe && document.hidden && "Notification" in window && Notification.permission === "granted") {
-            const notificationBody = data.type === 'text' ? data.text : 'Te ha enviado un archivo multimedia';
-            new Notification(`Mensaje de ${data.user}`, {
-                body: notificationBody,
-                icon: 'https://cdn-icons-png.flaticon.com/512/732/732200.png'
-            });
+        if (!isSentByMe && document.hidden) {
+            const bodyText = data.type === 'text' ? data.text : 'Te ha enviado un archivo multimedia';
+            triggerNotification(`Mensaje de ${data.user}`, bodyText);
         }
 
         const messageDiv = document.createElement('div');
@@ -223,7 +249,6 @@ function listenForMessages() {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
 
-    // Escuchar cuando la otra persona lee el mensaje (actualización de estado en tiempo real)
     messagesRef.on('child_changed', (snapshot) => {
         const data = snapshot.val();
         const msgDiv = document.getElementById(`msg-${snapshot.key}`);
@@ -249,14 +274,14 @@ function listenForMessages() {
     });
 }
 
-// 8. Vaciar Chat
+// 10. Vaciar Chat
 function clearChat() {
     if (confirm("¿Estás seguro de que deseas borrar todos los mensajes de la sala?")) {
         messagesRef.remove();
     }
 }
 
-// 9. Sanitizar HTML
+// 11. Sanitizar HTML
 function escapeHTML(str) {
     if (!str) return '';
     return str.replace(/[&<>'"]/g, 
