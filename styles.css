@@ -197,12 +197,10 @@ button:hover {
     line-height: 1;
 }
 
-/* Un solo check (Enviado a Firebase) */
 .status-ticks.sent {
     color: #888888;
 }
 
-/* Doble check (Leído por el otro usuario) */
 .status-ticks.read {
     color: #34b7f1;
 }
