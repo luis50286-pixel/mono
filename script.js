@@ -38,20 +38,36 @@ function login() {
 function requestNotificationPermissions() {
     if (window.AndroidBridge && typeof window.AndroidBridge.requestPermission === 'function') {
         window.AndroidBridge.requestPermission();
-    } else if ("Notification" in window && Notification.permission !== "granted") {
-        Notification.requestPermission();
+    } else if ("Notification" in window) {
+        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
     }
 }
 
-// 3. Disparar Notificaciones
+// 3. Disparar Notificaciones (Compatibilidad Web + Móvil + APK)
 function triggerNotification(title, body) {
+    const options = {
+        body: body,
+        icon: 'https://cdn-icons-png.flaticon.com/512/732/732200.png'
+    };
+
+    // Caso A: Si es APK nativa con puente Java/Kotlin
     if (window.AndroidBridge && typeof window.AndroidBridge.showNotification === 'function') {
         window.AndroidBridge.showNotification(title, body);
-    } else if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(title, {
-            body: body,
-            icon: 'https://cdn-icons-png.flaticon.com/512/732/732200.png'
+    } 
+    // Caso B: Si es un celular o navegador con Service Worker activo
+    else if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+        navigator.serviceWorker.ready.then(function(registration) {
+            registration.showNotification(title, options);
+        }).catch(function() {
+            // Fallback si falla el SW
+            new Notification(title, options);
         });
+    } 
+    // Caso C: Navegador de Escritorio estándar
+    else if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, options);
     }
 }
 
@@ -94,12 +110,11 @@ function sendMessage() {
     }
 }
 
-// 6. Subir Fotos / Videos mediante Firebase Storage
+// 6. Subir Fotos / Videos
 function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Límite amplio para Firebase Storage (ej. 50 MB)
     const MAX_SIZE_MB = 50;
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
         alert(`El archivo es muy pesado. Elige una foto o video menor a ${MAX_SIZE_MB}MB.`);
@@ -118,9 +133,7 @@ function handleFileUpload(event) {
     const uploadTask = storageRef.put(file);
 
     uploadTask.on('state_changed', 
-        (snapshot) => {
-            // Progreso opcional de subida
-        }, 
+        (snapshot) => {}, 
         (error) => {
             console.error("Error al subir el archivo:", error);
             alert("No se pudo subir la foto o video.");
@@ -212,7 +225,8 @@ function listenForMessages() {
             messagesRef.child(msgKey).child('readBy').child(currentUser).set(true);
         }
 
-        if (!isSentByMe && document.hidden) {
+        // CORREGIDO: Se envía la notificación a cualquier mensaje entrante que no sea mío
+        if (!isSentByMe) {
             const bodyText = data.type === 'text' ? data.text : 'Te ha enviado un archivo multimedia';
             triggerNotification(`Mensaje de ${data.user}`, bodyText);
         }
